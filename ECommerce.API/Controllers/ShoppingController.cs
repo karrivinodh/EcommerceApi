@@ -47,7 +47,20 @@ namespace ECommerce.API.Controllers
             var result = dataAccess.InsertUser(user);
 
             string? message;
-            if (result) message = "inserted";
+            if (result) message = "Your Registration is Successful";
+            else message = "email not available";
+            return Ok(message);
+        }
+        [HttpPost("RegisterVendor")]
+        public IActionResult RegisterVendor([FromBody] Vendors vendor)
+        {
+            vendor.CreatedAt = DateTime.Now.ToString(DateFormat);
+            vendor.ModifiedAt = DateTime.Now.ToString(DateFormat);
+
+            var result = dataAccess.InsertVendor(vendor);
+
+            string? message;
+            if (result) message = "Your Registration is Successful";
             else message = "email not available";
             return Ok(message);
         }
@@ -58,7 +71,28 @@ namespace ECommerce.API.Controllers
             var token = dataAccess.IsUserPresent(user.Email, user.Password);
             if (token == "") token = "invalid";
             return Ok(token);
+
         }
+        [HttpPost("LoginVendor")]
+        public IActionResult LoginVendor([FromBody]  Vendors vendor)
+        {
+            var token = dataAccess.IsVendorPresent(vendor.Email, vendor.Password);
+            if (token == "") token = "invalid";
+            return Ok(token);
+        }
+
+        [HttpPost("forgotpassword")]
+            
+            public IActionResult ForgotPassword([FromBody] User user)
+        {
+            var token =dataAccess.Forgotpassword(user.Email, user.Password);
+
+            return Ok(token);
+
+        }             
+           
+
+            
 
         [HttpPost("InsertReview")]
         public IActionResult InsertReview([FromBody] Review review)

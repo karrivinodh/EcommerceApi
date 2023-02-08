@@ -21,5 +21,10 @@ namespace ECommerce.API.DataAccess
         List<PaymentMethod> GetPaymentMethods();
         int InsertPayment(Payment payment);
         int InsertOrder(Order order);
+        bool InsertVendor(Vendors vendor);
+        string IsVendorPresent(string email, string password);
+        Vendors GetVendor(int id);
+
+        string Forgotpassword(string email,string password);
     }
 }

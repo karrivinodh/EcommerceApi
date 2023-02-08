@@ -1,4 +1,6 @@
-﻿using ECommerce.API.Models;
+﻿using ECommerce.API.Helpers;
+using ECommerce.API.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -384,6 +386,36 @@ namespace ECommerce.API.DataAccess
             }
             return user;
         }
+        public Vendors GetVendor(int id)
+        {
+            var vendor = new Vendors();
+            using (SqlConnection connection = new(dbconnection))
+            {
+                SqlCommand command = new()
+                {
+                    Connection = connection
+                };
+
+                string query = "SELECT * FROM Vendors WHERE VendorId=" + id + ";";
+                command.CommandText = query;
+
+                connection.Open();
+                SqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    vendor.Id = (int)reader["VendorId"];
+                    vendor.FirstName = (string)reader["FirstName"];
+                    vendor.LastName = (string)reader["LastName"];
+                    vendor.Email = (string)reader["Email"];
+                    vendor.Address = (string)reader["Address"];
+                    vendor.Mobile = (string)reader["Mobile"];
+                    vendor.Password = (string)reader["Password"];
+                    vendor.CreatedAt = (string)reader["CreatedAt"];
+                    vendor.ModifiedAt = (string)reader["ModifiedAt"];
+                }
+            }
+            return vendor;
+        }
 
         public bool InsertCartItem(int userId, int productId)
         {
@@ -543,9 +575,48 @@ namespace ECommerce.API.DataAccess
                 command.Parameters.Add("@add", System.Data.SqlDbType.NVarChar).Value = user.Address;
                 command.Parameters.Add("@mb", System.Data.SqlDbType.NVarChar).Value = user.Mobile;
                 command.Parameters.Add("@em", System.Data.SqlDbType.NVarChar).Value = user.Email;
+                user.Password = PasswordHasher.HashPassword(user.Password);
                 command.Parameters.Add("@pwd", System.Data.SqlDbType.NVarChar).Value = user.Password;
+          
                 command.Parameters.Add("@cat", System.Data.SqlDbType.NVarChar).Value = user.CreatedAt;
                 command.Parameters.Add("@mat", System.Data.SqlDbType.NVarChar).Value = user.ModifiedAt;
+                user.Password=PasswordHasher.HashPassword(user.Password);
+
+                command.ExecuteNonQuery();
+            }
+            return true;
+        }
+        public bool InsertVendor(Vendors vendor)
+        {
+            using (SqlConnection connection = new(dbconnection))
+            {
+                SqlCommand command = new()
+                {
+                    Connection = connection
+                };
+                connection.Open();
+
+                string query = "SELECT COUNT(*) FROM Vendors WHERE Email='" + vendor.Email + "';";
+                command.CommandText = query;
+                int count = (int)command.ExecuteScalar();
+                if (count > 0)
+                {
+                    connection.Close();
+                    return false;
+                }
+
+                query = "INSERT INTO Vendors (FirstName, LastName, Address, Mobile, Email, Password, CreatedAt, ModifiedAt) values (@fn, @ln, @add, @mb, @em, @pwd, @cat, @mat);";
+
+                command.CommandText = query;
+                command.Parameters.Add("@fn", System.Data.SqlDbType.NVarChar).Value = vendor.FirstName;
+                command.Parameters.Add("@ln", System.Data.SqlDbType.NVarChar).Value = vendor.LastName;
+                command.Parameters.Add("@add", System.Data.SqlDbType.NVarChar).Value = vendor.Address;
+                command.Parameters.Add("@mb", System.Data.SqlDbType.NVarChar).Value = vendor.Mobile;
+                command.Parameters.Add("@em", System.Data.SqlDbType.NVarChar).Value = vendor.Email;
+                vendor.Password = PasswordHasher.HashPassword(vendor.Password);
+                command.Parameters.Add("@pwd", System.Data.SqlDbType.NVarChar).Value = vendor.Password;
+                command.Parameters.Add("@cat", System.Data.SqlDbType.NVarChar).Value = vendor.CreatedAt;
+                command.Parameters.Add("@mat", System.Data.SqlDbType.NVarChar).Value = vendor.ModifiedAt;
 
                 command.ExecuteNonQuery();
             }
@@ -617,5 +688,93 @@ namespace ECommerce.API.DataAccess
             }
             return "";
         }
+        public string IsVendorPresent(string email, string password)
+        {
+            Vendors vendor = new();
+            using (SqlConnection connection = new(dbconnection))
+            {
+                SqlCommand command = new()
+                {
+                    Connection = connection
+                };
+
+                connection.Open();
+                string query = "SELECT COUNT(*) FROM Vendors WHERE Email='" + email + "' AND Password='" + password + "';";
+                command.CommandText = query;
+                int count = (int)command.ExecuteScalar();
+                if (count == 0)
+                {
+                    connection.Close();
+                    return "";
+                }
+
+                query = "SELECT * FROM Vendors WHERE Email='" + email + "' AND Password='" + password + "';";
+                command.CommandText = query;
+
+                SqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    vendor.Id = (int)reader["VendorId"];
+                    vendor.FirstName = (string)reader["FirstName"];
+                    vendor.LastName = (string)reader["LastName"];
+                    vendor.Email = (string)reader["Email"];
+                    vendor.Address = (string)reader["Address"];
+                    vendor.Mobile = (string)reader["Mobile"];
+                    vendor.Password = (string)reader["Password"];
+                    vendor.CreatedAt = (string)reader["CreatedAt"];
+                    vendor.ModifiedAt = (string)reader["ModifiedAt"];
+                }
+
+                string key = "MNU66iBl3T5rh6H52i69";
+                string duration = "60";
+                var symmetrickey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+                var credentials = new SigningCredentials(symmetrickey, SecurityAlgorithms.HmacSha256);
+
+                var claims = new[]
+                {
+                    new Claim("id", vendor.Id.ToString()),
+                    new Claim("firstName", vendor.FirstName),
+                    new Claim("lastName", vendor.LastName),
+                    new Claim("address", vendor.Address),
+                    new Claim("mobile", vendor.Mobile),
+                    new Claim("email", vendor.Email),
+                    new Claim("createdAt", vendor.CreatedAt),
+                    new Claim("modifiedAt", vendor.ModifiedAt)
+                };
+
+                var jwtToken = new JwtSecurityToken(
+                    issuer: "localhost",
+                    audience: "localhost",
+                    claims: claims,
+                    expires: DateTime.Now.AddMinutes(Int32.Parse(duration)),
+                    signingCredentials: credentials);
+
+                return new JwtSecurityTokenHandler().WriteToken(jwtToken);
+            }
+            return "";
+        }
+
+        public string Forgotpassword(string email, string password)
+        {
+            User user = new User();
+            using (SqlConnection conn = new SqlConnection(dbconnection))
+            {
+                conn.Open();
+                try
+                {
+                    using (SqlCommand cmd = new SqlCommand("UPDATE Users SET Password='"+password+"' WHERE email='"+email+"'", conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                catch (SqlException ex)
+                {
+                     return ex.Message;
+                }
+            }
+            return "";
+        }
+        }
+
     }
-}
+
