@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+﻿/*using System.Security.Cryptography;
 
 namespace ECommerce.API.Helpers
 {
@@ -44,4 +44,4 @@ namespace ECommerce.API.Helpers
             }
         }
     }
-
+*/

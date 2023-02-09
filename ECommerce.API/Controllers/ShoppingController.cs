@@ -1,4 +1,6 @@
-﻿using ECommerce.API.DataAccess;
+﻿using ECommerce.API.AppLogger;
+using ECommerce.API.DataAccess;
+
 using ECommerce.API.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +13,13 @@ namespace ECommerce.API.Controllers
     {
         readonly IDataAccess dataAccess;
         private readonly string DateFormat;
-        public ShoppingController(IDataAccess dataAccess, IConfiguration configuration)
+        private readonly ILoggerEcommerce loggerEcommerce;
+        public ShoppingController(IDataAccess dataAccess, IConfiguration configuration,ILoggerEcommerce _loggerEcommerce)
         {
             this.dataAccess = dataAccess;
             DateFormat = configuration["Constants:DateFormat"];
+            loggerEcommerce = _loggerEcommerce;
+            loggerEcommerce.RecordLogInformation("Now we are inside the shopping controller");
         }
 
         [HttpGet("GetCategoryList")]
@@ -48,8 +53,11 @@ namespace ECommerce.API.Controllers
 
             string? message;
             if (result) message = "Your Registration is Successful";
+
             else message = "email not available";
+            loggerEcommerce.RecordLogInformation("User Registration is Recorded");
             return Ok(message);
+            
         }
         [HttpPost("RegisterVendor")]
         public IActionResult RegisterVendor([FromBody] Vendors vendor)
@@ -62,6 +70,7 @@ namespace ECommerce.API.Controllers
             string? message;
             if (result) message = "Your Registration is Successful";
             else message = "email not available";
+            loggerEcommerce.RecordLogInformation("Vendor Registration is Recorded");
             return Ok(message);
         }
 
@@ -70,6 +79,10 @@ namespace ECommerce.API.Controllers
         {
             var token = dataAccess.IsUserPresent(user.Email, user.Password);
             if (token == "") token = "invalid";
+           /* if (!PasswordHasher.VerifyPassword(user.Password, user.Password))
+            {
+                return BadRequest(new { Message = "Password is incorrect" });
+            }*/
             return Ok(token);
 
         }
@@ -86,7 +99,7 @@ namespace ECommerce.API.Controllers
             public IActionResult ForgotPassword([FromBody] User user)
         {
             var token =dataAccess.Forgotpassword(user.Email, user.Password);
-
+            if (token =="") token="invalid";
             return Ok(token);
 
         }             

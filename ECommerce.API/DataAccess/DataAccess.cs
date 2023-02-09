@@ -1,4 +1,4 @@
-﻿using ECommerce.API.Helpers;
+﻿
 using ECommerce.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -575,12 +575,12 @@ namespace ECommerce.API.DataAccess
                 command.Parameters.Add("@add", System.Data.SqlDbType.NVarChar).Value = user.Address;
                 command.Parameters.Add("@mb", System.Data.SqlDbType.NVarChar).Value = user.Mobile;
                 command.Parameters.Add("@em", System.Data.SqlDbType.NVarChar).Value = user.Email;
-                user.Password = PasswordHasher.HashPassword(user.Password);
+                //user.Password = PasswordHasher.HashPassword(user.Password);
                 command.Parameters.Add("@pwd", System.Data.SqlDbType.NVarChar).Value = user.Password;
           
                 command.Parameters.Add("@cat", System.Data.SqlDbType.NVarChar).Value = user.CreatedAt;
                 command.Parameters.Add("@mat", System.Data.SqlDbType.NVarChar).Value = user.ModifiedAt;
-                user.Password=PasswordHasher.HashPassword(user.Password);
+                //user.Password=PasswordHasher.HashPassword(user.Password);
 
                 command.ExecuteNonQuery();
             }
@@ -613,7 +613,7 @@ namespace ECommerce.API.DataAccess
                 command.Parameters.Add("@add", System.Data.SqlDbType.NVarChar).Value = vendor.Address;
                 command.Parameters.Add("@mb", System.Data.SqlDbType.NVarChar).Value = vendor.Mobile;
                 command.Parameters.Add("@em", System.Data.SqlDbType.NVarChar).Value = vendor.Email;
-                vendor.Password = PasswordHasher.HashPassword(vendor.Password);
+               // vendor.Password = PasswordHasher.HashPassword(vendor.Password);
                 command.Parameters.Add("@pwd", System.Data.SqlDbType.NVarChar).Value = vendor.Password;
                 command.Parameters.Add("@cat", System.Data.SqlDbType.NVarChar).Value = vendor.CreatedAt;
                 command.Parameters.Add("@mat", System.Data.SqlDbType.NVarChar).Value = vendor.ModifiedAt;
